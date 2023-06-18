@@ -22,3 +22,8 @@ const subscribeToUIVisible = (onChange: () => void) =>
 export const useAppVisible = () => {
   return React.useSyncExternalStore(subscribeToUIVisible, () => _visible);
 };
+
+export const genRandomStr = () => Math.random().
+    toString(36).
+    replace(/[^a-z]+/g, '').
+    substring(0, 5)

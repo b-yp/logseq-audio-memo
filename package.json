@@ -10,8 +10,10 @@
   "license": "MIT",
   "dependencies": {
     "@logseq/libs": "^0.0.14",
+    "js-audio-recorder": "^1.0.7",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "recorder-core": "^1.2.23061700"
   },
   "devDependencies": {
     "@semantic-release/changelog": "6.0.3",
