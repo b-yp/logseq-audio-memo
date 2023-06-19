@@ -247,24 +247,30 @@ function main() {
         recorder.destroy().then(function () {
           recorder = null
           logseq.UI.showMsg('⬅ 已删除', 'warning')
-          // 删除之后需要清楚 render 的 block
+          // 删除之后需要清除 render 的 block
           logseq.Editor.removeBlock(e.dataset.render_block_uuid)
+          recorderStatus = RecorderStatusEnum.Readied
         })
       },
       async handleInsert() {
         if (!recorder) return
         const blob = recorder.getWAVBlob() as Blob
-        console.log('res', blob)
         const buffer = await blob.arrayBuffer()
         const storage = logseq.Assets.makeSandboxStorage()
         storage.setItem(`audio_memo_${Date.now()}.wav`, buffer as any).then(one => {
           logseq.UI.showMsg(`Write DONE 🎉 - ${one}`, 'success')
           const path = (one as unknown as string).match(/\/assets\/(.*)/ig)
-          console.log('path', path)
           if (path) {
             const name = (/([^/]+)\.(wav)/ig).exec(path[0])
             const video = `![${name || '🤡'}](..${path})`
             logseq.Editor.updateBlock(renderBlock?.uuid as string, video || '🤡')
+
+            if (!recorder) return
+            // 销毁录音实例，置为null释放资源，fn为回调函数，
+            recorder.destroy().then(function () {
+              recorder = null
+              recorderStatus = RecorderStatusEnum.Readied
+            })
           }
         }).catch(error => {
           logseq.UI.showMsg(JSON.stringify(Object.keys(error).length !== 0 ? (error.message || error) : '写入失败'), 'error')
