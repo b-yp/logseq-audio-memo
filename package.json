@@ -10,7 +10,9 @@
   "license": "MIT",
   "dependencies": {
     "@logseq/libs": "^0.0.14",
+    "@types/lodash": "^4.14.195",
     "js-audio-recorder": "^1.0.7",
+    "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "recorder-core": "^1.2.23061700"

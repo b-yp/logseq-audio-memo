@@ -3,13 +3,15 @@ import "@logseq/libs";
 import React from "react";
 import * as ReactDOM from "react-dom/client";
 import Recorder from "js-audio-recorder"
+import throttle from 'lodash/throttle'
 
 import App from "./App";
-import { ICON } from "./constants";
-import { genRandomStr } from "./utils";
+import { ICON, RECORDER_STATUS_TEXT, RecorderStatusEnum } from "./constants";
 import { logseq as PL } from "../package.json";
 
 import "./index.css";
+import { BlockEntity } from "@logseq/libs/dist/LSPlugin";
+import { formatFileSize, formatTime } from "./utils";
 
 // @ts-expect-error
 const css = (t, ...args) => String.raw(t, ...args);
@@ -27,78 +29,250 @@ function main() {
     </React.StrictMode>
   );
 
-  // const recorder = new Recorder()
-  // recorder.start().then(() => {
-  //   // 开始录音
-  //   setTimeout(() => {
-  //     recorder.stop()
-
-  //     recorder.play()
-  //     console.log('播放▶️')
-  //   }, 10000);
-  // }, (error) => {
-  //   // 出错了
-  //   console.log(`${error.name} : ${error.message}`);
-  // });
+  let recorder: Recorder | null = null
+  let recorderStatus = RecorderStatusEnum.Readied
+  let currentBlock: BlockEntity | null = null
+  let renderBlock: BlockEntity | null = null
 
   function createModel() {
     return {
       async handleRecord() {
-        const block = await logseq.Editor.getCurrentBlock()
+        currentBlock = await logseq.Editor.getCurrentBlock()
+        if (!currentBlock?.uuid) return
 
-        if (!block?.uuid) return
-        await logseq.Editor.insertBlock(block?.uuid, `{{renderer :audio_memo_${genRandomStr()}}}`)
+        if (recorder) {
+          alert('⚠️ 你已经有一个录音实例, 请结束之后再开始新的')
+          return
+        }
 
+        renderBlock = await logseq.Editor.insertBlock(
+          currentBlock?.uuid,
+          `{{renderer :audio_memo_renderer_container_id}}\n{{renderer :audio_memo_renderer_tools_id}}`
+        )
+
+        // TODO: 获取录音权限好像有点问题, 使用原生获取
+        // const permission =  await Recorder()
+
+        const audioPermission = await navigator.mediaDevices.getUserMedia({ audio: true })
+
+        if (!audioPermission) {
+          logseq.UI.showMsg('授权失败，请重新授权', 'error')
+          return
+        }
+
+        recorder = new Recorder()
+        logseq.UI.showMsg('initialization', 'success')
+
+        let dataOption: { duration: number, fileSize: number, vol: number } | any = {}
+
+        // 渲染录制信息
+        logseq.App.onMacroRendererSlotted(async ({ slot, payload }) => {
+          // TODO: 这里面每次清除之后执行次数会累加
+          const [type] = payload.arguments
+          if (!type?.startsWith(':audio_memo_renderer_container')) {
+            return
+          }
+          if (!recorder) return
+
+          const setContainerUI = () => {
+            const id = `audio_memo_renderer_container_id`
+            logseq.provideUI({
+              key: id,
+              slot,
+              template: `
+              <div class="audio-memo">
+                <div class="container">
+                  <div class="status">${RECORDER_STATUS_TEXT[recorderStatus]}</div>
+                  <div> 录音时长: ${formatTime(dataOption?.duration || 0)}</div>
+                  <div> 录音大小: ${formatFileSize(dataOption?.fileSize || 0)}</div>
+                  <div> 音量百分比: ${dataOption?.vol || 0}</div>
+                </div>
+              </div>
+            `,
+            })
+          }
+
+          // 没有点击录音之前执行的
+          setContainerUI()
+
+          // 监听获取录音数据
+          recorder.onprogress = throttle((params) => {
+            console.log('parse progress', params)
+            dataOption = params
+
+            setContainerUI()
+            // const id = `audio_memo_renderer_container_id`
+            // logseq.provideUI({
+            //   key: id,
+            //   slot,
+            //   template: `
+            //     <div class="audio-memo">
+            //       <div class="container">
+            //         <div>${RECORDER_STATUS_TEXT[recorderStatus]}</div>
+            //         <div> 录音时长: ${formatTime(dataOption?.duration || 0)}</div>
+            //         <div> 录音大小: ${formatFileSize(dataOption?.fileSize || 0)}</div>
+            //         <div> 音量百分比: ${dataOption?.vol || 0}</div>
+            //       </div>
+            //     </div>
+            //   `,
+            // })
+          }, 100)
+
+          // 监听播放回调
+          recorder.onplay = () => {
+            recorderStatus = RecorderStatusEnum.Playing
+            setContainerUI()
+          }
+
+          // 监听播放暂停回调
+          recorder.onpauseplay = () => {
+            recorderStatus = RecorderStatusEnum.PausedPlay
+            setContainerUI()
+          }
+
+          // 监听播放恢复回调
+          recorder.onresumeplay = () => {
+            recorderStatus = RecorderStatusEnum.Playing
+            setContainerUI()
+          }
+
+          // 监听播放停止回调
+          recorder.onstopplay = () => {
+            recorderStatus = RecorderStatusEnum.StoppedPlay
+            setContainerUI()
+          }
+
+          // 监听播放完成回调
+          recorder.onplayend = () => {
+            recorderStatus = RecorderStatusEnum.CompletedPlay
+            setContainerUI()
+          }
+        })
+
+        // 渲染按钮组
         logseq.App.onMacroRendererSlotted(async ({ slot, payload }) => {
           const [type] = payload.arguments
-          if (!type?.startsWith(':audio_memo')) {
+          if (!type?.startsWith(':audio_memo_renderer_tools')) {
             return
           }
 
-          const id = `audio_memo_${payload.uuid}`
-
+          const id = `audio_memo_renderer_tools_id`
           logseq.provideUI({
             key: id,
             slot,
             template: `
-              <div class="audio-memo">
-                <div class="container">
-                  录音可视化
-                </div>
-                <div class="controls">
-                  <button class="btn" data-on-click="handleStart">录音</button>
-                  <button class="btn" data-on-click="handlePause">暂停</button>
-                  <button class="btn" data-on-click="handleResume">继续</button>
-                  <button class="btn" data-on-click="handleStop">停止</button>
-                  <button class="btn" data-on-click="handlePlay">播放</button>
-                  <button class="btn" data-on-click="handleDelete">删除</button>
-                  <button class="btn" data-on-click="handleInsert">插入</button>
-                </div>
+              <div class="controls">
+                <button class="btn" data-on-click="handleStart">录音</button>
+                <button class="btn" data-on-click="handlePause">暂停</button>
+                <button class="btn" data-on-click="handleResume">继续</button>
+                <button class="btn btn-warning" data-on-click="handleStop">停止</button>
+                <button class="btn btn-info" data-on-click="handlePlay">播放</button>
+                <button class="btn" data-on-click="handlePausePlay">暂停播放</button>
+                <button class="btn" data-on-click="handleResumePlay">继续播放</button>
+                <button class="btn" data-on-click="handleStopPlay">停止播放</button>
+                <button class="btn btn-danger" data-render_block_uuid="${renderBlock?.uuid}" data-on-click="handleDelete">删除</button>
+                <button class="btn btn-success" data-on-click="handleInsert">插入</button>
+                <button class="btn btn-success" data-on-click="handleDownload">下载</button>
               </div>
             `,
           })
+
         })
       },
-      handleStart() {
-        console.log('开始录音')
+      async handleStart() {
+        if (!recorder) return
+        if (recorderStatus === RecorderStatusEnum.Running) {
+          logseq.UI.showMsg('有一个录音正在录制', 'warning')
+          return
+        }
+        if (recorderStatus === RecorderStatusEnum.Paused) {
+          logseq.UI.showMsg('有一个录音已暂停', 'warning')
+          return
+        }
+        recorder.start().then(() => {
+          // 开始录音
+          recorderStatus = RecorderStatusEnum.Running
+          logseq.UI.showMsg('🎉 开始录制', 'success')
+        }, (error) => {
+          // 出错了
+          console.log(`${error.name} : 🐛 ${error.message}`)
+        })
       },
       handlePause() {
-        console.log('暂停')
+        if (!recorder) return
+        recorder.pause()
+        recorderStatus = RecorderStatusEnum.Paused
+        logseq.UI.showMsg('⏸ 暂停录制', 'success')
       },
       handleResume() {
-        console.log('继续')
+        if (!recorder) return
+        recorder.resume()
+        recorderStatus = RecorderStatusEnum.Running
+        logseq.UI.showMsg('▶ 恢复录制', 'success')
       },
-      handleStop() {
-        console.log('停止')
+      async handleStop() {
+        if (!recorder) return
+        recorder.stop()
+        recorderStatus = RecorderStatusEnum.Stopped
+        logseq.UI.showMsg('⏹ 结束录制', 'success')
       },
       handlePlay() {
-        console.log('播放')
+        if (!recorder) return
+        recorder.play()
+        recorderStatus = RecorderStatusEnum.Playing
+        const dataArray = recorder.getPlayAnalyseData();
+        console.log('play-dataArray', dataArray)
       },
-      handleDelete() {
-        console.log('删除')
+      handlePausePlay() {
+        if (!recorder) return
+        recorder.pausePlay()
+        recorderStatus = RecorderStatusEnum.PausedPlay
       },
-      handleInsert() {
-        console.log('插入')
+      handleResumePlay() {
+        if (!recorder) return
+        recorder.resumePlay()
+        recorderStatus = RecorderStatusEnum.Playing
+      },
+      handleStopPlay() {
+        if (!recorder) return
+        recorder.stopPlay()
+        recorderStatus = RecorderStatusEnum.StoppedPlay
+      },
+
+      handleDelete(e: any) {
+        if (!recorder) return
+        const flag = confirm('⚠ 删除操作不可恢复，确认继续吗？')
+        if (!flag) return
+        // 销毁录音实例，置为null释放资源，fn为回调函数，
+        recorder.destroy().then(function () {
+          recorder = null
+          logseq.UI.showMsg('⬅ 已删除', 'warning')
+          // 删除之后需要清楚 render 的 block
+          logseq.Editor.removeBlock(e.dataset.render_block_uuid)
+        })
+      },
+      async handleInsert() {
+        if (!recorder) return
+        const blob = recorder.getWAVBlob() as Blob
+        console.log('res', blob)
+        const buffer = await blob.arrayBuffer()
+        const storage = logseq.Assets.makeSandboxStorage()
+        storage.setItem(`audio_memo_${Date.now()}.wav`, buffer as any).then(one => {
+          logseq.UI.showMsg(`Write DONE 🎉 - ${one}`, 'success')
+          const path = (one as unknown as string).match(/\/assets\/(.*)/ig)
+          console.log('path', path)
+          if (path) {
+            const name = (/([^/]+)\.(wav)/ig).exec(path[0])
+            const video = `![${name || '🤡'}](..${path})`
+            logseq.Editor.updateBlock(renderBlock?.uuid as string, video || '🤡')
+          }
+        }).catch(error => {
+          logseq.UI.showMsg(JSON.stringify(Object.keys(error).length !== 0 ? (error.message || error) : '写入失败'), 'error')
+        })
+      },
+      handleDownload() {
+        if (!recorder) return
+        recorder.downloadWAV(`audio_memo_${Date.now()}`)
       }
     };
   }
@@ -122,23 +296,59 @@ function main() {
   .audio-memo {
   }
   .container {
-    width: 100%;
-    height: 100px;
+    width: 576px;
+    padding: 8px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     background-color: #fff;
+    border-radius: 4px;
+    color: #333;
+  }
+  .container>div {
+    line-height: 32px;
+  }
+  .container>div.status {
+    font-weight: bold;
   }
   .controls {
     display: flex;
   }
   .controls>.btn {
-    height: 32px;
+    height: 24px;
     margin-right: 16px;
-    padding: 0 8px;
-    background-color: #3875f6;
+    padding: 0 6px;
+    background-color: #0064f7;
     border-radius: 4px;
-    line-height: 32px;
+    line-height: 24px;
+    font-size: 12px;
   }
   .controls>.btn:hover {
-    background-color: #5794f7;
+    background-color: #0054cd;
+  }
+  .controls>.btn.btn-warning {
+    background-color: #ffb92e;
+  }
+  .controls>.btn.btn-warning:hover {
+    background-color: #ffc33c;
+  }
+  .controls>.btn.btn-info {
+    background-color: #00c3eb;
+  }
+  .controls>.btn.btn-info:hover {
+    background-color: #00cced;
+  }
+  .controls>.btn.btn-danger {
+    background-color: #e22f40;
+  }
+  .controls>.btn.btn-danger:hover {
+    background-color: #bb2837; 
+  }
+  .controls>.btn.btn-success {
+    background-color: #007b4c;
+  }
+  .controls>.btn.btn-success:hover {
+    background-color: #006840;
   }
 `);
 
