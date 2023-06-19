@@ -14,7 +14,8 @@
 	- [ ] 支持插入文档前重命名
 - ## 演示
   - ![gif](./assets/logseq_audio_memo_demo.gif)
-  - ![mp4](http://img.ypll.xyz/logseq/logseq_audio_memo_demo.mp4)
+  - http://img.ypll.xyz/logseq/logseq_audio_memo_demo.mp4
 - ## 鸣谢
 	- 实现录音功能使用了这个库: https://github.com/2fps/recorder @[2fps](https://github.com/2fps)
 - ## 许可证
+  - [MIT](https://choosealicense.com/licenses/mit/)
