@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/b-yp/logseq-audio-memo/compare/v1.0.0...v1.1.0) (2023-06-20)
+
+
+### Bug Fixes
+
+* The logo is missing ([2a4d7c1](https://github.com/b-yp/logseq-audio-memo/commit/2a4d7c1f22fb385deb60af37fae0df7c8a913ce7))
+
+
+### Features
+
+* update logo ([7e343b2](https://github.com/b-yp/logseq-audio-memo/commit/7e343b2f3c0c9803a06c618a5f2708ac0bc66508))
+
 # 1.0.0 (2023-06-19)
 
 
