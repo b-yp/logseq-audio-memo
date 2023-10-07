@@ -1,4 +1,5 @@
 import "@logseq/libs";
+import { BlockEntity } from "@logseq/libs/dist/LSPlugin";
 
 import React from "react";
 import * as ReactDOM from "react-dom/client";
@@ -6,20 +7,22 @@ import Recorder from "js-audio-recorder"
 import throttle from 'lodash/throttle'
 
 import App from "./App";
-import { ICON, RECORDER_STATUS_TEXT, RecorderStatusEnum } from "./constants";
+import { ICON, getRecorderStatus, RecorderStatusEnum } from "./constants";
 import { logseq as PL } from "../package.json";
+import { formatFileSize, formatTime } from "./utils";
 
 import "./index.css";
-import { BlockEntity } from "@logseq/libs/dist/LSPlugin";
-import { formatFileSize, formatTime } from "./utils";
 
 // @ts-expect-error
 const css = (t, ...args) => String.raw(t, ...args);
 
 const pluginId = PL.id;
 
-function main() {
+async function main() {
   console.info(`#${pluginId}: MAIN`);
+
+  const { preferredLanguage } = await logseq.App.getUserConfigs();
+  const isChinese = preferredLanguage === "zh-CN" || preferredLanguage === "zh-TW";
 
   const root = ReactDOM.createRoot(document.getElementById("app")!);
 
@@ -41,7 +44,7 @@ function main() {
         if (!currentBlock?.uuid) return
 
         if (recorder) {
-          alert('⚠️ 你已经有一个录音实例, 请结束之后再开始新的')
+          alert(isChinese ? '⚠️ 你已经有一个录音实例, 请结束之后再开始新的' : '⚠️ You already have a recording instance, please finish it before starting a new one')
           return
         }
 
@@ -56,7 +59,7 @@ function main() {
         const audioPermission = await navigator.mediaDevices.getUserMedia({ audio: true })
 
         if (!audioPermission) {
-          logseq.UI.showMsg('授权失败，请重新授权', 'error')
+          logseq.UI.showMsg(isChinese ? '授权失败，请重新授权' : 'Authorization failed, please reauthorize', 'error')
           return
         }
 
@@ -82,10 +85,10 @@ function main() {
               template: `
               <div class="audio-memo">
                 <div class="container">
-                  <div class="status">${RECORDER_STATUS_TEXT[recorderStatus]}</div>
-                  <div> 录音时长: ${formatTime(dataOption?.duration || 0)}</div>
-                  <div> 录音大小: ${formatFileSize(dataOption?.fileSize || 0)}</div>
-                  <div> 音量百分比: ${dataOption?.vol || 0}</div>
+                  <div class="status">${getRecorderStatus(recorderStatus, isChinese)}</div>
+                  <div> ${isChinese ? '录音时长' : 'Duration'}: ${formatTime(dataOption?.duration || 0, isChinese)}</div>
+                  <div> ${isChinese ? '录音大小' : 'Size'}: ${formatFileSize(dataOption?.fileSize || 0)}</div>
+                  <div> ${isChinese ? '音量百分比' : 'Volume'}: ${dataOption?.vol || 0}</div>
                 </div>
               </div>
             `,
@@ -109,7 +112,7 @@ function main() {
             //     <div class="audio-memo">
             //       <div class="container">
             //         <div>${RECORDER_STATUS_TEXT[recorderStatus]}</div>
-            //         <div> 录音时长: ${formatTime(dataOption?.duration || 0)}</div>
+            //         <div> 录音时长: ${formatTime(dataOption?.duration || 0, isChinese)}</div>
             //         <div> 录音大小: ${formatFileSize(dataOption?.fileSize || 0)}</div>
             //         <div> 音量百分比: ${dataOption?.vol || 0}</div>
             //       </div>
@@ -162,37 +165,36 @@ function main() {
             slot,
             template: `
               <div class="controls">
-                <button class="btn" data-on-click="handleStart">录音</button>
-                <button class="btn" data-on-click="handlePause">暂停</button>
-                <button class="btn" data-on-click="handleResume">继续</button>
-                <button class="btn btn-warning" data-on-click="handleStop">停止</button>
-                <button class="btn btn-info" data-on-click="handlePlay">播放</button>
-                <button class="btn" data-on-click="handlePausePlay">暂停播放</button>
-                <button class="btn" data-on-click="handleResumePlay">继续播放</button>
-                <button class="btn" data-on-click="handleStopPlay">停止播放</button>
-                <button class="btn btn-danger" data-render_block_uuid="${renderBlock?.uuid}" data-on-click="handleDelete">删除</button>
-                <button class="btn btn-success" data-on-click="handleInsert">插入</button>
-                <button class="btn btn-success" data-on-click="handleDownload">下载</button>
+                <button class="btn" data-on-click="handleStart">${isChinese ? '录音' : 'Start'}</button>
+                <button class="btn" data-on-click="handlePause">${isChinese ? '暂停' : 'Pause Recording'}</button>
+                <button class="btn" data-on-click="handleResume">${isChinese ? '继续' : 'Continue Recording'}</button>
+                <button class="btn btn-warning" data-on-click="handleStop">${isChinese ? '停止' : 'Stop Recording'}</button>
+                <button class="btn btn-info" data-on-click="handlePlay">${isChinese ? '播放' : 'Play'}</button>
+                <button class="btn" data-on-click="handlePausePlay">${isChinese ? '暂停播放' : 'Pause Playing'}</button>
+                <button class="btn" data-on-click="handleResumePlay">${isChinese ? '继续播放' : 'Continue Playing'}</button>
+                <button class="btn" data-on-click="handleStopPlay">${isChinese ? '停止播放' : 'Stop Playing'}</button>
+                <button class="btn btn-danger" data-render_block_uuid="${renderBlock?.uuid}" data-on-click="handleDelete">${isChinese ? '删除' : 'Delete'}</button>
+                <button class="btn btn-success" data-on-click="handleInsert">${isChinese ? '插入' : 'Insert'}</button>
+                <button class="btn btn-success" data-on-click="handleDownload">${isChinese ? '下载': 'Download'}</button>
               </div>
             `,
           })
-
         })
       },
       async handleStart() {
         if (!recorder) return
         if (recorderStatus === RecorderStatusEnum.Running) {
-          logseq.UI.showMsg('有一个录音正在录制', 'warning')
+          logseq.UI.showMsg(isChinese ? '有一个录音正在录制' : 'A recording is currently in progress', 'warning')
           return
         }
         if (recorderStatus === RecorderStatusEnum.Paused) {
-          logseq.UI.showMsg('有一个录音已暂停', 'warning')
+          logseq.UI.showMsg(isChinese ? '有一个暂停中的录音' : 'A recording is currently paused', 'warning')
           return
         }
         recorder.start().then(() => {
           // 开始录音
           recorderStatus = RecorderStatusEnum.Running
-          logseq.UI.showMsg('🎉 开始录制', 'success')
+          logseq.UI.showMsg(isChinese ? '🎉 开始录制' : '🎉 Start Recording', 'success')
         }, (error) => {
           // 出错了
           console.log(`${error.name} : 🐛 ${error.message}`)
@@ -202,19 +204,19 @@ function main() {
         if (!recorder) return
         recorder.pause()
         recorderStatus = RecorderStatusEnum.Paused
-        logseq.UI.showMsg('⏸ 暂停录制', 'success')
+        logseq.UI.showMsg(isChinese ? '⏸ 暂停录制' : '⏸ Paused Recording', 'success')
       },
       handleResume() {
         if (!recorder) return
         recorder.resume()
         recorderStatus = RecorderStatusEnum.Running
-        logseq.UI.showMsg('▶ 恢复录制', 'success')
+        logseq.UI.showMsg(isChinese ? '▶ 恢复录制' : '▶ Continue Recording', 'success')
       },
       async handleStop() {
         if (!recorder) return
         recorder.stop()
         recorderStatus = RecorderStatusEnum.Stopped
-        logseq.UI.showMsg('⏹ 结束录制', 'success')
+        logseq.UI.showMsg(isChinese ? '⏹ 结束录制' : '⏹ Stop Recording', 'success')
       },
       handlePlay() {
         if (!recorder) return
@@ -241,12 +243,12 @@ function main() {
 
       handleDelete(e: any) {
         if (!recorder) return
-        const flag = confirm('⚠ 删除操作不可恢复，确认继续吗？')
+        const flag = confirm(isChinese ? '⚠ 删除操作不可恢复，确认继续吗？' : '⚠ Deletion is irreversible, do you confirm to proceed?')
         if (!flag) return
         // 销毁录音实例，置为null释放资源，fn为回调函数，
         recorder.destroy().then(function () {
           recorder = null
-          logseq.UI.showMsg('⬅ 已删除', 'warning')
+          logseq.UI.showMsg(isChinese ? '⬅ 已删除' : '⬅ Deleted' , 'warning')
           // 删除之后需要清除 render 的 block
           logseq.Editor.removeBlock(e.dataset.render_block_uuid)
           recorderStatus = RecorderStatusEnum.Readied
@@ -273,7 +275,7 @@ function main() {
             })
           }
         }).catch(error => {
-          logseq.UI.showMsg(JSON.stringify(Object.keys(error).length !== 0 ? (error.message || error) : '写入失败'), 'error')
+          logseq.UI.showMsg(JSON.stringify(Object.keys(error).length !== 0 ? (error.message || error) : isChinese ? '写入失败' : 'Write failed'), 'error')
         })
       },
       handleDownload() {

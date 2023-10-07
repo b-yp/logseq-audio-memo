@@ -28,7 +28,7 @@ export const genRandomStr = () => Math.random().
   replace(/[^a-z]+/g, '').
   substring(0, 5)
 
-export const formatTime = (seconds: number): string => {
+export const formatTime = (seconds: number, isChinese: boolean): string => {
     const MINUTE = 60;
     const HOUR = 60 * MINUTE;
     const DAY = 24 * HOUR;
@@ -44,16 +44,16 @@ export const formatTime = (seconds: number): string => {
   
     let result = '';
     if (days > 0) {
-      result += `${days} 天 `;
+      result += `${days} ${isChinese ? '天': `${days === 1 ? 'Day' : 'Days'}`} `;
     }
     if (hours > 0) {
-      result += `${hours} 小时 `;
+      result += `${hours} ${isChinese ? '小时' : `${ hours === 1 ? 'Hour' : 'Hours' }`} `;
     }
     if (minutes > 0) {
-      result += `${minutes} 分钟 `;
+      result += `${minutes} ${isChinese ? '分钟' : `${ minutes === 1 ? 'Minute' : 'Minutes' }`} `;
     }
     if (seconds >= 0) {
-      result += `${seconds.toFixed(2)} 秒`;
+      result += `${seconds.toFixed(2)} ${isChinese ? '秒' : `${seconds === 1 ? 'Second' : 'Seconds'}`} `;
     }
   
     return result.trim();
