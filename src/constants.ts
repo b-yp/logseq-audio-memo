@@ -2,7 +2,7 @@ export const ICON = `<svg t="1687091200563" class="icon" viewBox="0 0 1024 1024"
 
 export enum RecorderStatusEnum {
   Readied = 'readied',
-  Running = 'running', 
+  Running = 'running',
   Paused = 'paused',
   Stopped = 'stopped',
   Playing = 'playing',
@@ -11,13 +11,13 @@ export enum RecorderStatusEnum {
   CompletedPlay = 'completed_play',
 }
 
-export const RECORDER_STATUS_TEXT = {
-  [RecorderStatusEnum.Readied]: '👌 待开始',
-  [RecorderStatusEnum.Running]: '⏺ 录制中...',
-  [RecorderStatusEnum.Paused]: '⏸ 暂停录制',
-  [RecorderStatusEnum.Stopped]: '⏹ 停止录制',
-  [RecorderStatusEnum.Playing]: '🎧 播放中...',
-  [RecorderStatusEnum.PausedPlay]: '⏸ 暂停播放',
-  [RecorderStatusEnum.StoppedPlay]: '⏹ 停止播放',
-  [RecorderStatusEnum.CompletedPlay]: '💿 完成播放',
-}
+export const getRecorderStatus = (status: RecorderStatusEnum, isChinese) => ({
+  [RecorderStatusEnum.Readied]: isChinese ? '👌 待开始' : '👌 Waiting to start',
+  [RecorderStatusEnum.Running]: isChinese ? '⏺ 录制中...' : '⏺ Recording...',
+  [RecorderStatusEnum.Paused]: isChinese ? '⏸ 暂停录制' : '⏸ Paused Recording',
+  [RecorderStatusEnum.Stopped]: isChinese ? '⏹ 停止录制' : '⏹ Stop Recording',
+  [RecorderStatusEnum.Playing]: isChinese ? '🎧 播放中...' : '🎧 Playing...',
+  [RecorderStatusEnum.PausedPlay]: isChinese ? '⏸ 暂停播放' : '⏸ Paused Playing',
+  [RecorderStatusEnum.StoppedPlay]: isChinese ? '⏹ 停止播放' : '⏹ Stop Playing',
+  [RecorderStatusEnum.CompletedPlay]: isChinese ? '💿 播放完毕' : '💿 Finished Playing',
+})[status]
