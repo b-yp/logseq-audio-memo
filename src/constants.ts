@@ -11,7 +11,7 @@ export enum RecorderStatusEnum {
   CompletedPlay = 'completed_play',
 }
 
-export const getRecorderStatus = (status: RecorderStatusEnum, isChinese) => ({
+export const getRecorderStatus = (status: RecorderStatusEnum, isChinese: boolean) => ({
   [RecorderStatusEnum.Readied]: isChinese ? '👌 待开始' : '👌 Waiting to start',
   [RecorderStatusEnum.Running]: isChinese ? '⏺ 录制中...' : '⏺ Recording...',
   [RecorderStatusEnum.Paused]: isChinese ? '⏸ 暂停录制' : '⏸ Paused Recording',
