@@ -100,7 +100,7 @@ async function main() {
 
           // 监听获取录音数据
           recorder.onprogress = throttle((params) => {
-            console.log('parse progress', params)
+            // console.log('parse progress', params)
             dataOption = params
 
             setContainerUI()
@@ -165,13 +165,13 @@ async function main() {
             slot,
             template: `
               <div class="controls">
-                <button class="btn" data-on-click="handleStart">${isChinese ? '录音' : 'Start'}</button>
-                <button class="btn" data-on-click="handlePause">${isChinese ? '暂停' : 'Pause Recording'}</button>
-                <button class="btn" data-on-click="handleResume">${isChinese ? '继续' : 'Continue Recording'}</button>
+                <button class="btn" data-on-click="handleStart">${isChinese ? '录音' : 'Record'}</button>
+                <!-- <button class="btn" data-on-click="handlePause">${isChinese ? '暂停' : 'Pause Recording'}</button> -->
+                <!-- <button class="btn" data-on-click="handleResume">${isChinese ? '继续' : 'Continue Recording'}</button> -->
                 <button class="btn btn-warning" data-on-click="handleStop">${isChinese ? '停止' : 'Stop Recording'}</button>
                 <button class="btn btn-info" data-on-click="handlePlay">${isChinese ? '播放' : 'Play'}</button>
-                <button class="btn" data-on-click="handlePausePlay">${isChinese ? '暂停播放' : 'Pause Playing'}</button>
-                <button class="btn" data-on-click="handleResumePlay">${isChinese ? '继续播放' : 'Continue Playing'}</button>
+                <!-- <button class="btn" data-on-click="handlePausePlay">${isChinese ? '暂停播放' : 'Pause Playing'}</button> -->
+                <!-- <button class="btn" data-on-click="handleResumePlay">${isChinese ? '继续播放' : 'Continue Playing'}</button> -->
                 <button class="btn" data-on-click="handleStopPlay">${isChinese ? '停止播放' : 'Stop Playing'}</button>
                 <button class="btn btn-danger" data-render_block_uuid="${renderBlock?.uuid}" data-on-click="handleDelete">${isChinese ? '删除' : 'Delete'}</button>
                 <button class="btn btn-success" data-on-click="handleInsert">${isChinese ? '插入' : 'Insert'}</button>
