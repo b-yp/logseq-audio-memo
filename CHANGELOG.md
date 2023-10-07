@@ -1,3 +1,16 @@
+# [1.2.0](https://github.com/b-yp/logseq-audio-memo/compare/v1.1.0...v1.2.0) (2023-10-07)
+
+
+### Bug Fixes
+
+* Fix build failed ([6ef54b6](https://github.com/b-yp/logseq-audio-memo/commit/6ef54b6ceeae0d49d4b24c14c21d076b282afacb))
+
+
+### Features
+
+* Add English ([bf9ecac](https://github.com/b-yp/logseq-audio-memo/commit/bf9ecac1dab92db5ed05b9a565fe0d57a3866266))
+* Disable pause and Continue buttons ([aa83ffc](https://github.com/b-yp/logseq-audio-memo/commit/aa83ffcfdfbf3f7ceb7dae00676618790bfd5342))
+
 # [1.1.0](https://github.com/b-yp/logseq-audio-memo/compare/v1.0.0...v1.1.0) (2023-06-20)
 
 
