@@ -28,50 +28,31 @@ export const genRandomStr = () => Math.random().
   replace(/[^a-z]+/g, '').
   substring(0, 5)
 
-export const formatTime = (seconds: number, isChinese: boolean): string => {
-    const MINUTE = 60;
-    const HOUR = 60 * MINUTE;
-    const DAY = 24 * HOUR;
-  
-    const days = Math.floor(seconds / DAY);
-    seconds %= DAY;
-  
-    const hours = Math.floor(seconds / HOUR);
-    seconds %= HOUR;
-  
-    const minutes = Math.floor(seconds / MINUTE);
-    seconds %= MINUTE;
-  
-    let result = '';
-    if (days > 0) {
-      result += `${days} ${isChinese ? '天': `${days === 1 ? 'Day' : 'Days'}`} `;
-    }
-    if (hours > 0) {
-      result += `${hours} ${isChinese ? '小时' : `${ hours === 1 ? 'Hour' : 'Hours' }`} `;
-    }
-    if (minutes > 0) {
-      result += `${minutes} ${isChinese ? '分钟' : `${ minutes === 1 ? 'Minute' : 'Minutes' }`} `;
-    }
-    if (seconds >= 0) {
-      result += `${seconds.toFixed(2)} ${isChinese ? '秒' : `${seconds === 1 ? 'Second' : 'Seconds'}`} `;
-    }
-  
-    return result.trim();
+export const formatTime = (seconds: number): string => {
+  const totalSeconds = Math.max(0, Math.floor(seconds || 0));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
+
+  const pad = (n: number) => n.toString().padStart(2, "0");
+
+  if (hours > 0) {
+    return `${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
   }
+  return `${pad(minutes)}:${pad(secs)}`;
+};
 
 export const formatFileSize = (size: number): string => {
-    const GB = 1024 * 1024 * 1024;
-    const MB = 1024 * 1024;
-    const KB = 1024;
-  
-    if (size >= GB) {
-      return `${(size / GB).toFixed(1)} GB`;
-    }
-    if (size >= MB) {
-      return `${(size / MB).toFixed(1)} MB`;
-    }
-    if (size >= KB) {
-      return `${(size / KB).toFixed(1)} KB`;
-    }
-    return `${size}B`;
+  if (!size || size <= 0) return "0 KB";
+  const KB = 1024;
+  const MB = 1024 * 1024;
+  const GB = 1024 * 1024 * 1024;
+
+  if (size >= GB) {
+    return `${(size / GB).toFixed(1)} GB`;
   }
+  if (size >= MB) {
+    return `${(size / MB).toFixed(1)} MB`;
+  }
+  return `${(size / KB).toFixed(0)} KB`;
+};
