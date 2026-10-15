@@ -42,6 +42,7 @@
   },
   "logseq": {
     "id": "byp-logseq-audio-memo",
-    "icon": "./logo.svg"
+    "icon": "./logo.svg",
+    "supportsDB": true
   }
 }

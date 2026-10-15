@@ -414,7 +414,9 @@ async function main() {
           let inserted = false;
 
           if (targetBlock?.uuid) {
-            if (!targetBlock.content || targetBlock.content.trim() === "") {
+            // DB graphs store block text in `title` (`content` was removed); file graphs still use `content`
+            const blockText = targetBlock.title || targetBlock.content || "";
+            if (blockText.trim() === "") {
               await logseq.Editor.updateBlock(targetBlock.uuid, audioMarkdown);
               inserted = true;
             } else {
