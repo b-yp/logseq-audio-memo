@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/b-yp/logseq-audio-memo/compare/v1.3.0...v1.4.0) (2026-10-15)
+
+
+### Features
+
+* support Logseq DB graphs ([3fb4264](https://github.com/b-yp/logseq-audio-memo/commit/3fb4264f418505cfe8e8099fd1cf89ee356de5fc))
+
 # [1.3.0](https://github.com/b-yp/logseq-audio-memo/compare/v1.2.0...v1.3.0) (2026-09-20)
 
 # [1.2.0](https://github.com/b-yp/logseq-audio-memo/compare/v1.1.0...v1.2.0) (2023-10-07)
